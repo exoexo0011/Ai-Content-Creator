@@ -1,6 +1,12 @@
 import { useEffect } from 'react'
 import { usePipeline } from '../context/PipelineContext.jsx'
 
+// Settings is rendered as a FULL-FRAME overlay (not a bottom sheet) so it
+// cannot be clipped at the bottom of the phone frame. The panel fills the
+// entire app surface (`absolute inset-0`) and scrolls internally if its
+// content exceeds the viewport. A `backdrop-blur-xl` on the panel itself
+// preserves the blurred-page effect behind the 5% transparency, so the
+// "backdrop blur" treatment is kept without a separate backdrop layer.
 export default function SettingsSheet({ open, onClose }) {
   const { mockMode, setMockMode, resetResult } = usePipeline()
 
@@ -28,95 +34,92 @@ export default function SettingsSheet({ open, onClose }) {
 
   return (
     <div
-      className="absolute inset-0 z-40"
+      className="absolute inset-0 z-40 fade-in"
       role="dialog"
       aria-modal="true"
       aria-labelledby="settings-title"
     >
-      {/* Backdrop */}
-      <button
-        type="button"
-        aria-label="Close settings"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/60 backdrop-blur-[2px] sheet-backdrop-in"
-      />
-
-      {/* Sheet */}
-      <div className="absolute bottom-0 left-0 right-0 bg-[#0e0e12]/95 backdrop-blur-xl border-t border-line rounded-t-3xl shadow-[0_-12px_40px_rgba(0,0,0,0.5)] sheet-in pb-6">
-        {/* Grabber */}
-        <div className="flex justify-center pt-2.5 pb-3">
-          <span aria-hidden="true" className="h-1 w-9 rounded-full bg-line-strong" />
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 pb-3">
+      {/* Full-frame panel — covers the whole phone frame, never clipped */}
+      <div className="absolute inset-0 bg-[#0e0e12]/95 backdrop-blur-xl flex flex-col">
+        {/* Sticky header. Close button always reachable at the top right. */}
+        <div className="shrink-0 flex items-center justify-between px-5 pt-5 pb-4 border-b border-line">
           <h2 id="settings-title" className="text-[18px] font-semibold text-ink">
             Settings
           </h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
-            className="grid place-items-center h-8 w-8 rounded-full bg-surface border border-line text-ink-2 hover:bg-primary-soft hover:text-primary hover:border-primary-ring transition-colors"
+            aria-label="Close settings"
+            className="grid place-items-center h-9 w-9 rounded-full bg-surface border border-line text-ink-2 hover:border-primary-ring hover:text-ink transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              <path
+                d="M6 6l12 12M18 6L6 18"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
             </svg>
           </button>
         </div>
 
-        {/* Pipeline mode */}
-        <section className="px-5">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-mute mb-2">
-            Pipeline mode
-          </h3>
+        {/* Scrollable content area. If the device is short or the panel grows
+            in the future, this area scrolls internally — the panel itself
+            never gets cut off. */}
+        <div className="flex-1 overflow-y-auto no-scrollbar pb-6">
+          {/* Pipeline mode */}
+          <section className="px-5 pt-5">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-mute mb-2">
+              Pipeline mode
+            </h3>
 
-          <div className="rounded-2xl bg-surface border border-line overflow-hidden">
-            <ModeOption
-              active={!mockMode}
-              onClick={() => setMockMode(false)}
-              title="Live"
-              description="Routes through the /api/nvidia serverless proxy to NVIDIA NIM (Llama 4 Maverick)."
-              badge="Real"
-            />
-            <div className="border-t border-line" />
-            <ModeOption
-              active={mockMode}
-              onClick={() => setMockMode(true)}
-              title="Mock"
-              description="Returns canned demo data. Safe for testing the UI."
-              badge="Free"
-            />
-          </div>
-        </section>
+            <div className="rounded-2xl bg-surface border border-line overflow-hidden">
+              <ModeOption
+                active={!mockMode}
+                onClick={() => setMockMode(false)}
+                title="Live"
+                description="Routes through the /api/nvidia serverless proxy to NVIDIA NIM (Llama 4 Maverick)."
+                badge="Real"
+              />
+              <div className="border-t border-line" />
+              <ModeOption
+                active={mockMode}
+                onClick={() => setMockMode(true)}
+                title="Mock"
+                description="Returns canned demo data. Safe for testing the UI."
+                badge="Free"
+              />
+            </div>
+          </section>
 
-        {/* Workspace */}
-        <section className="px-5 mt-5">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-mute mb-2">
-            Workspace
-          </h3>
-          <button
-            type="button"
-            onClick={() => {
-              resetResult()
-              onClose()
-            }}
-            className="w-full text-left rounded-2xl bg-surface border border-line p-4 hover:border-primary-ring transition-colors"
-          >
-            <p className="text-[14px] font-semibold text-ink">
-              Clear last pipeline result
-            </p>
-            <p className="text-[12.5px] text-mute mt-0.5 leading-snug">
-              Removes the saved topic and result from this browser.
-            </p>
-          </button>
-        </section>
+          {/* Workspace */}
+          <section className="px-5 mt-5">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-mute mb-2">
+              Workspace
+            </h3>
+            <button
+              type="button"
+              onClick={() => {
+                resetResult()
+                onClose()
+              }}
+              className="w-full text-left rounded-2xl bg-surface border border-line p-4 hover:border-primary-ring transition-colors"
+            >
+              <p className="text-[14px] font-semibold text-ink">
+                Clear last pipeline result
+              </p>
+              <p className="text-[12.5px] text-mute mt-0.5 leading-snug">
+                Removes the saved topic and result from this browser.
+              </p>
+            </button>
+          </section>
 
-        {/* Footer meta */}
-        <p className="px-5 mt-5 text-[11px] text-mute leading-snug">
-          AI Content Creator · v0.1.0 · niche locked: AI tools, Claude Code,
-          automation
-        </p>
+          {/* Footer meta */}
+          <p className="px-5 mt-6 text-[11px] text-mute leading-snug">
+            AI Content Creator · v0.1.0 · niche locked: AI tools, Claude Code,
+            automation
+          </p>
+        </div>
       </div>
     </div>
   )
