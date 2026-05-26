@@ -2,7 +2,7 @@ export default function Toast({ message, tone = 'success' }) {
   const styles = {
     success: 'bg-[#1a1a20]/95 backdrop-blur-md text-white border border-white/10',
     error: 'bg-danger text-white',
-    info: 'bg-primary text-white',
+    info: 'bg-primary text-black',
   }
   const icons = {
     success: (

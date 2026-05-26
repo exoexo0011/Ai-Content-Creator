@@ -2,10 +2,10 @@
 
 @theme {
   /* Brand */
-  --color-primary: #534ab7;
-  --color-primary-hover: #6358d3;
-  --color-primary-soft: rgba(83, 74, 183, 0.22);
-  --color-primary-ring: rgba(83, 74, 183, 0.55);
+  --color-primary: #00ff41;
+  --color-primary-hover: #00cc33;
+  --color-primary-soft: rgba(0, 255, 65, 0.08);
+  --color-primary-ring: rgba(0, 255, 65, 0.15);
 
   /* Surfaces — glass-on-GIF */
   --color-canvas: rgba(255, 255, 255, 0.04);
@@ -139,9 +139,9 @@ body {
 .shimmer {
   background: linear-gradient(
     90deg,
-    rgba(83, 74, 183, 0.06) 0%,
-    rgba(83, 74, 183, 0.24) 50%,
-    rgba(83, 74, 183, 0.06) 100%
+    rgba(0, 255, 65, 0.06) 0%,
+    rgba(0, 255, 65, 0.24) 50%,
+    rgba(0, 255, 65, 0.06) 100%
   );
   background-size: 200px 100%;
   animation: shimmer 1.4s linear infinite;

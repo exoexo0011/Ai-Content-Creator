@@ -33,7 +33,7 @@ export default function AppShell({ children }) {
             <div className="flex items-center gap-2.5">
               <span
                 aria-hidden="true"
-                className="grid place-items-center h-8 w-8 rounded-xl bg-primary text-white font-bold text-[15px]"
+                className="grid place-items-center h-8 w-8 rounded-xl bg-primary text-black font-bold text-[15px]"
               >
                 P
               </span>

@@ -17,7 +17,7 @@ export default function EmptyState({ icon, title, description, ctaLabel = 'Run p
         )}
         <Link
           to={ctaTo}
-          className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary text-white px-5 py-2.5 text-[13px] font-semibold hover:bg-primary-hover transition-colors"
+          className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary text-black px-5 py-2.5 text-[13px] font-semibold hover:bg-primary-hover transition-colors"
         >
           {ctaLabel}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">

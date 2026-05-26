@@ -70,7 +70,7 @@ export default function Pipeline() {
               type="button"
               onClick={() => runPipeline()}
               disabled={isRunning || !topic.trim()}
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-white text-[13px] font-semibold hover:bg-primary-hover active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-black text-[13px] font-semibold hover:bg-primary-hover active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {isRunning ? (
                 <>
@@ -99,7 +99,7 @@ export default function Pipeline() {
                 Validated topic
               </span>
               {result.validatedTopic.tag && (
-                <span className="ml-auto inline-flex items-center rounded-full bg-primary text-white px-2 py-0.5 text-[10px] font-semibold">
+                <span className="ml-auto inline-flex items-center rounded-full bg-primary text-black px-2 py-0.5 text-[10px] font-semibold">
                   {result.validatedTopic.tag}
                 </span>
               )}
@@ -163,7 +163,7 @@ function AgentCard({ agent, status, delay }) {
         className={[
           'relative grid place-items-center h-11 w-11 rounded-xl shrink-0 transition-colors',
           done
-            ? 'bg-primary text-white'
+            ? 'bg-primary text-black'
             : running
               ? 'bg-primary-soft text-primary'
               : 'bg-canvas text-ink-2',
@@ -199,7 +199,7 @@ function StatusBadge({ status }) {
     },
     done: {
       label: 'Done',
-      className: 'bg-primary text-white border-primary',
+      className: 'bg-primary text-black border-primary',
     },
   }
   const s = map[status] ?? map.ready

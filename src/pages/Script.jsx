@@ -67,7 +67,7 @@ export default function Script() {
               className={[
                 'fade-in rounded-2xl border p-4 relative overflow-hidden',
                 isCta
-                  ? 'bg-primary text-white border-primary'
+                  ? 'bg-primary text-black border-primary'
                   : 'bg-surface text-ink border-line',
               ].join(' ')}
               style={{ animationDelay: `${100 + i * 80}ms` }}
@@ -76,7 +76,7 @@ export default function Script() {
                 <h3
                   className={[
                     'text-[10.5px] font-semibold uppercase tracking-[0.18em]',
-                    isCta ? 'text-white/80' : 'text-primary',
+                    isCta ? 'text-black/70' : 'text-primary',
                   ].join(' ')}
                 >
                   {b.label}
@@ -84,7 +84,7 @@ export default function Script() {
                 <span
                   className={[
                     'text-[10.5px] font-medium uppercase tracking-[0.14em]',
-                    isCta ? 'text-white/70' : 'text-mute',
+                    isCta ? 'text-black/60' : 'text-mute',
                   ].join(' ')}
                 >
                   {b.role}
@@ -108,7 +108,7 @@ export default function Script() {
         <button
           type="button"
           onClick={handleCopy}
-          className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary text-white py-3 text-[13px] font-semibold hover:bg-primary-hover active:translate-y-px transition"
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary text-black py-3 text-[13px] font-semibold hover:bg-primary-hover active:translate-y-px transition"
         >
           <CopyIcon />
           Copy full script
@@ -129,7 +129,7 @@ function Tag({ children, tone }) {
       className={[
         'inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold',
         primary
-          ? 'bg-primary text-white'
+          ? 'bg-primary text-black'
           : 'bg-surface text-ink-2 border border-line',
       ].join(' ')}
     >

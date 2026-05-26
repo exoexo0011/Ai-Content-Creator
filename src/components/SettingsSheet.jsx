@@ -145,7 +145,7 @@ function ModeOption({ active, onClick, title, description, badge }) {
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
             <path
               d="M5 12.5l4 4 10-10"
-              stroke="white"
+              stroke="black"
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -168,7 +168,7 @@ function ModeOption({ active, onClick, title, description, badge }) {
             className={[
               'inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
               active
-                ? 'bg-primary text-white'
+                ? 'bg-primary text-black'
                 : 'bg-canvas text-ink-2 border border-line',
             ].join(' ')}
           >

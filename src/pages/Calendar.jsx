@@ -51,14 +51,14 @@ export default function Calendar() {
                 className={[
                   'flex-1 rounded-2xl border py-3 text-center transition-colors',
                   active
-                    ? 'bg-primary border-primary text-white'
+                    ? 'bg-primary border-primary text-black'
                     : 'bg-surface border-line text-ink-2 hover:border-primary-ring',
                 ].join(' ')}
               >
                 <p
                   className={[
                     'text-[10px] font-semibold uppercase tracking-[0.18em]',
-                    active ? 'text-white/80' : 'text-mute',
+                    active ? 'text-black/70' : 'text-mute',
                   ].join(' ')}
                 >
                   {shortDay(d.day, i)}
@@ -160,7 +160,7 @@ export default function Calendar() {
           type="button"
           onClick={() => runPipeline()}
           disabled={isRunning}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-white py-3 text-[13px] font-semibold hover:bg-primary-hover active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-black py-3 text-[13px] font-semibold hover:bg-primary-hover active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           {isRunning ? (
             <>

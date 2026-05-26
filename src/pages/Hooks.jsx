@@ -75,7 +75,7 @@ export default function Hooks() {
                   </span>
                 )}
                 {recommended && (
-                  <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary text-white px-2.5 py-1 text-[10.5px] font-semibold">
+                  <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary text-black px-2.5 py-1 text-[10.5px] font-semibold">
                     <StarIcon />
                     Recommended
                   </span>
@@ -106,7 +106,7 @@ export default function Hooks() {
                 className={[
                   'mt-3 w-full inline-flex items-center justify-center gap-2 rounded-full py-2.5 text-[12.5px] font-semibold transition',
                   recommended
-                    ? 'bg-primary text-white hover:bg-primary-hover'
+                    ? 'bg-primary text-black hover:bg-primary-hover'
                     : 'bg-canvas text-ink border border-line hover:border-primary-ring hover:text-primary',
                 ].join(' ')}
               >
