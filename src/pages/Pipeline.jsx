@@ -39,9 +39,9 @@ export default function Pipeline() {
   return (
     <div className="rise">
       <PageHeader
-        eyebrow="Pipeline"
-        title="Run the full stack"
-        kicker="Four agents. One topic. Camera-ready script in under a minute."
+        eyebrow="CONTENT ENGINE"
+        title="Create Viral Content"
+        kicker="Drop a topic. Get a script, hooks, and a full week of content — ready to post."
       />
 
       {/* Topic input */}
@@ -59,7 +59,7 @@ export default function Pipeline() {
             onChange={(e) => setTopic(e.target.value)}
             rows={3}
             className="w-full resize-none bg-transparent p-4 text-[15px] leading-snug text-ink placeholder:text-mute focus:outline-none"
-            placeholder="What are we creating today?"
+            placeholder="What do you want to go viral for today?"
             disabled={isRunning}
           />
           <div className="flex items-center justify-between px-4 pb-3 pt-1 border-t border-line/70">
@@ -79,7 +79,7 @@ export default function Pipeline() {
                 </>
               ) : (
                 <>
-                  Run full pipeline
+                  Generate Content
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
