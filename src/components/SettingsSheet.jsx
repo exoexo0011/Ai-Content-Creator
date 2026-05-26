@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { usePipeline } from '../context/PipelineContext.jsx'
+import { useInstallPrompt } from '../hooks/useInstallPrompt.js'
 
 // Settings is rendered as a FULL-FRAME overlay (not a bottom sheet) so it
 // cannot be clipped at the bottom of the phone frame. The panel fills the
@@ -8,7 +9,24 @@ import { usePipeline } from '../context/PipelineContext.jsx'
 // preserves the blurred-page effect behind the 5% transparency, so the
 // "backdrop blur" treatment is kept without a separate backdrop layer.
 export default function SettingsSheet({ open, onClose }) {
-  const { mockMode, setMockMode, resetResult } = usePipeline()
+  const { mockMode, setMockMode, resetResult, showToast } = usePipeline()
+  const { isAvailable, isStandalone, promptInstall } = useInstallPrompt()
+  const [showInstallHint, setShowInstallHint] = useState(false)
+
+  const handleInstallClick = async () => {
+    if (isStandalone) return
+    if (isAvailable) {
+      const choice = await promptInstall()
+      if (choice?.outcome === 'accepted') {
+        showToast('Installed! 🎉', 'success', 2400)
+        onClose()
+      }
+    } else {
+      // No native prompt available (iOS Safari, or Chrome hasn't met
+      // install criteria yet). Reveal the manual instruction inline.
+      setShowInstallHint(true)
+    }
+  }
 
   // Close on ESC
   useEffect(() => {
@@ -92,6 +110,48 @@ export default function SettingsSheet({ open, onClose }) {
                 badge="Free"
               />
             </div>
+          </section>
+
+          {/* Get the app */}
+          <section className="px-5 mt-5">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-mute mb-2">
+              Get the app
+            </h3>
+            <button
+              type="button"
+              onClick={handleInstallClick}
+              disabled={isStandalone}
+              className="w-full text-left rounded-2xl bg-surface border border-line p-4 hover:border-primary-ring disabled:opacity-60 disabled:cursor-default transition-colors flex items-center gap-3"
+            >
+              <span
+                aria-hidden="true"
+                className="grid place-items-center h-10 w-10 rounded-xl bg-primary-soft text-primary shrink-0"
+              >
+                <DownloadIcon />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-semibold text-ink">
+                  {isStandalone ? 'Already installed' : 'Add to Home Screen'}
+                </p>
+                <p className="text-[12.5px] text-mute mt-0.5 leading-snug">
+                  {isStandalone
+                    ? "You're running the installed app"
+                    : 'Install as a mobile app'}
+                </p>
+              </div>
+              {!isStandalone && (
+                <ChevronRightIcon />
+              )}
+            </button>
+            {showInstallHint && !isStandalone && (
+              <p className="mt-2 text-[12px] text-mute leading-snug px-1">
+                In your browser menu, tap{' '}
+                <span className="text-ink font-semibold">
+                  &lsquo;Add to Home Screen&rsquo;
+                </span>
+                .
+              </p>
+            )}
           </section>
 
           {/* Workspace */}
@@ -185,5 +245,46 @@ function ModeOption({ active, onClick, title, description, badge }) {
         </p>
       </div>
     </button>
+  )
+}
+
+function DownloadIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 4v12m0 0l-4-4m4 4l4-4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5 19h14"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      className="text-mute shrink-0"
+      aria-hidden="true"
+    >
+      <path
+        d="M9 6l6 6-6 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }

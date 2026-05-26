@@ -1,0 +1,25 @@
+{
+  "name": "AI Content Creator",
+  "short_name": "AI Creator",
+  "description": "Drop a topic. Get a script, hooks, and a week of content — ready to post.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00FF41",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "type": "image/png",
+      "sizes": "672x371",
+      "purpose": "any"
+    }
+  ]
+}

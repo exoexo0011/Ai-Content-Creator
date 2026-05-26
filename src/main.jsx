@@ -11,3 +11,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </React.StrictMode>,
 )
+
+// Register the service worker so the app is installable as a PWA.
+// `beforeinstallprompt` won't fire in Chromium browsers without one.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Swallow errors — SW is non-critical for app function.
+    })
+  })
+}

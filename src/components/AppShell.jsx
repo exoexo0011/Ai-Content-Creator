@@ -2,6 +2,7 @@ import { useState } from 'react'
 import TabBar from './TabBar.jsx'
 import Toast from './Toast.jsx'
 import SettingsSheet from './SettingsSheet.jsx'
+import InstallBanner from './InstallBanner.jsx'
 import { usePipeline } from '../context/PipelineContext.jsx'
 
 export default function AppShell({ children }) {
@@ -62,6 +63,11 @@ export default function AppShell({ children }) {
               <SettingsIcon />
             </button>
           </header>
+
+          {/* Install banner — sits below the header, above main. Hidden
+              by default; appears only the first time the browser fires
+              `beforeinstallprompt` and disappears after dismiss/install. */}
+          <InstallBanner />
 
           {/* Scrollable content area. 80px bottom padding clears the
               fixed tab bar (which is roughly 76px tall including its own
