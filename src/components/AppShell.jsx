@@ -9,77 +9,80 @@ export default function AppShell({ children }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
-    <>
-      {/* Looping GIF background — fills viewport, sits behind everything */}
-      <img
-        src="/bg.gif"
-        alt=""
-        aria-hidden="true"
-        className="gif-bg"
-        loading="eager"
-        decoding="async"
-      />
-      {/* Dark overlay on top of the GIF for readability */}
-      <div className="gif-overlay" aria-hidden="true" />
+    <div className="min-h-dvh w-full bg-black flex justify-center">
+      {/* Phone-frame container: mobile-first, capped at 390px.
+          The GIF + overlay live INSIDE this frame as absolute children, so
+          they fill the app surface — not the whole webpage. */}
+      <div className="relative w-full max-w-[390px] min-h-dvh flex flex-col overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.55)]">
+        {/* Looping GIF — fills the phone frame */}
+        <img
+          src="/bg.gif"
+          alt=""
+          aria-hidden="true"
+          className="gif-bg"
+          loading="eager"
+          decoding="async"
+        />
+        {/* Dark overlay on top of the GIF */}
+        <div className="gif-overlay" aria-hidden="true" />
 
-      <div className="relative z-[1] min-h-dvh w-full flex justify-center">
-      {/* Phone-frame container: mobile-first, capped at 390px */}
-      <div className="relative w-full max-w-[390px] min-h-dvh bg-canvas flex flex-col shadow-[0_8px_40px_rgba(0,0,0,0.5)] overflow-hidden">
-        {/* App header */}
-        <header className="flex items-center justify-between px-5 pt-5 pb-3 bg-canvas">
-          <div className="flex items-center gap-2.5">
-            <span
-              aria-hidden="true"
-              className="grid place-items-center h-8 w-8 rounded-xl bg-primary text-white font-bold text-[15px]"
-            >
-              P
-            </span>
-            <div className="leading-tight">
-              <p className="text-[15px] font-semibold text-ink tracking-tight">
-                AI Content Creator
-              </p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <p className="text-[10.5px] text-mute font-medium">
-                  4-agent pipeline
+        {/* Foreground stack — header, main, tab bar, sheet, toast */}
+        <div className="relative z-[1] flex flex-col min-h-dvh">
+          {/* App header */}
+          <header className="flex items-center justify-between px-5 pt-5 pb-3">
+            <div className="flex items-center gap-2.5">
+              <span
+                aria-hidden="true"
+                className="grid place-items-center h-8 w-8 rounded-xl bg-primary text-white font-bold text-[15px]"
+              >
+                P
+              </span>
+              <div className="leading-tight">
+                <p className="text-[15px] font-semibold text-ink tracking-tight">
+                  AI Content Creator
                 </p>
-                {mockMode && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-warn/15 text-warn px-1.5 py-[1px] text-[9.5px] font-semibold uppercase tracking-[0.06em]">
-                    <span className="h-1 w-1 rounded-full bg-warn" />
-                    Mock
-                  </span>
-                )}
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <p className="text-[10.5px] text-mute font-medium">
+                    4-agent pipeline
+                  </p>
+                  {mockMode && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-warn/20 text-warn px-1.5 py-[1px] text-[9.5px] font-semibold uppercase tracking-[0.06em]">
+                      <span className="h-1 w-1 rounded-full bg-warn" />
+                      Mock
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSettingsOpen(true)}
-            aria-label="Open settings"
-            className="grid place-items-center h-9 w-9 rounded-full bg-surface border border-line text-ink-2 hover:bg-primary-soft hover:text-primary hover:border-primary-ring transition-colors"
-          >
-            <SettingsIcon />
-          </button>
-        </header>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Open settings"
+              className="grid place-items-center h-9 w-9 rounded-full bg-surface border border-line text-ink-2 hover:border-primary-ring hover:text-ink transition-colors"
+            >
+              <SettingsIcon />
+            </button>
+          </header>
 
-        {/* Scrollable content area, padded for the fixed tab bar */}
-        <main className="flex-1 overflow-y-auto no-scrollbar pb-28">
-          {children}
-        </main>
+          {/* Scrollable content area, padded for the fixed tab bar */}
+          <main className="flex-1 overflow-y-auto no-scrollbar pb-28">
+            {children}
+          </main>
 
-        {/* Bottom tab bar */}
-        <TabBar />
+          {/* Bottom tab bar */}
+          <TabBar />
 
-        {/* Toast notification */}
-        {toast && <Toast message={toast.message} tone={toast.tone} />}
+          {/* Toast notification */}
+          {toast && <Toast message={toast.message} tone={toast.tone} />}
 
-        {/* Settings sheet */}
-        <SettingsSheet
-          open={settingsOpen}
-          onClose={() => setSettingsOpen(false)}
-        />
+          {/* Settings sheet */}
+          <SettingsSheet
+            open={settingsOpen}
+            onClose={() => setSettingsOpen(false)}
+          />
+        </div>
       </div>
-      </div>
-    </>
+    </div>
   )
 }
 
