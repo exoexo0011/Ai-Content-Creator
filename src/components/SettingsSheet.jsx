@@ -32,9 +32,11 @@ export default function SettingsSheet({ open, onClose }) {
 
   if (!open) return null
 
+  // z-60 sits above the fixed TabBar (z-50) so the Settings overlay
+  // still fully covers the tab bar when open.
   return (
     <div
-      className="absolute inset-0 z-40 fade-in"
+      className="absolute inset-0 z-[60] fade-in"
       role="dialog"
       aria-modal="true"
       aria-labelledby="settings-title"

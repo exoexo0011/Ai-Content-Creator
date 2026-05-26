@@ -8,10 +8,15 @@ const tabs = [
 ]
 
 export default function TabBar() {
+  // Fixed to the viewport so the tab bar is always visible regardless of
+  // page or container scroll. Constrained to the 390px phone frame width
+  // and centered horizontally so it lines up with the frame on desktop.
+  // z-50 keeps it above all normal content; the Settings overlay uses
+  // z-60 to still cover the tab bar when open.
   return (
     <nav
       aria-label="Primary"
-      className="absolute bottom-0 left-0 right-0 z-30 px-3 pb-3 pointer-events-none"
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] z-50 px-3 pb-3 pointer-events-none"
     >
       <div className="rounded-2xl bg-surface border border-line shadow-[0_6px_24px_rgba(20,20,30,0.08)] pointer-events-auto">
         <ul className="grid grid-cols-4">

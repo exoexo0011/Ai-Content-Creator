@@ -63,8 +63,10 @@ export default function AppShell({ children }) {
             </button>
           </header>
 
-          {/* Scrollable content area, padded for the fixed tab bar */}
-          <main className="flex-1 overflow-y-auto no-scrollbar pb-28">
+          {/* Scrollable content area. 80px bottom padding clears the
+              fixed tab bar (which is roughly 76px tall including its own
+              outer padding). */}
+          <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
             {children}
           </main>
 
