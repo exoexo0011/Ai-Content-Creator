@@ -9,9 +9,22 @@ export default function AppShell({ children }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
-    <div className="min-h-dvh w-full bg-[#ebebf2] flex justify-center">
+    <>
+      {/* Looping GIF background — fills viewport, sits behind everything */}
+      <img
+        src="/bg.gif"
+        alt=""
+        aria-hidden="true"
+        className="gif-bg"
+        loading="eager"
+        decoding="async"
+      />
+      {/* Dark overlay on top of the GIF for readability */}
+      <div className="gif-overlay" aria-hidden="true" />
+
+      <div className="relative z-[1] min-h-dvh w-full flex justify-center">
       {/* Phone-frame container: mobile-first, capped at 390px */}
-      <div className="relative w-full max-w-[390px] min-h-dvh bg-canvas flex flex-col shadow-[0_8px_40px_rgba(20,20,30,0.08)] overflow-hidden">
+      <div className="relative w-full max-w-[390px] min-h-dvh bg-canvas flex flex-col shadow-[0_8px_40px_rgba(0,0,0,0.5)] overflow-hidden">
         {/* App header */}
         <header className="flex items-center justify-between px-5 pt-5 pb-3 bg-canvas">
           <div className="flex items-center gap-2.5">
@@ -65,7 +78,8 @@ export default function AppShell({ children }) {
           onClose={() => setSettingsOpen(false)}
         />
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 
