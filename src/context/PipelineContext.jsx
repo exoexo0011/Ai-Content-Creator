@@ -13,8 +13,12 @@ const PipelineContext = createContext(null)
 
 export const AGENT_KEYS = ['scraper', 'validator', 'script', 'hooks']
 
-// NVIDIA NIM API — OpenAI-compatible chat completions endpoint
-const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1'
+// NVIDIA NIM is reached via our own /api/nvidia serverless proxy. The proxy
+// holds the API key server-side and forwards the request to
+// https://integrate.api.nvidia.com/v1/chat/completions. This avoids CORS
+// (the browser only talks to the same origin) and keeps the key off the
+// client. See api/nvidia.js for the proxy implementation.
+const PROXY_ENDPOINT = '/api/nvidia'
 const NVIDIA_MODEL = 'meta/llama-4-maverick-17b-128e-instruct'
 
 const SYSTEM_PROMPT = `You are an AI content strategist and script writer.
@@ -80,7 +84,11 @@ const STORAGE_KEY = 'aicc:result:v1'
 const TOPIC_KEY = 'aicc:topic:v1'
 const MOCK_KEY = 'aicc:mockMode:v1'
 
-const HAS_API_KEY = Boolean(import.meta.env.VITE_NVIDIA_API_KEY)
+// The client can no longer detect whether a server-side API key is configured
+// (the proxy holds the key, not the browser). We assume Live mode is
+// available; if the proxy is misconfigured the user will see a clear error
+// toast on first run and can switch to Mock from Settings.
+const HAS_API_KEY = true
 
 function loadResult() {
   try {
@@ -107,10 +115,10 @@ function loadMockMode() {
     const raw = localStorage.getItem(MOCK_KEY)
     if (raw === 'true') return true
     if (raw === 'false') return false
-    // No saved preference — default to mock if no API key, otherwise live
-    return !HAS_API_KEY
+    // No saved preference — default to Live mode (proxy is the standard path).
+    return false
   } catch {
-    return !HAS_API_KEY
+    return false
   }
 }
 
@@ -128,20 +136,13 @@ function extractJson(text) {
 }
 
 async function callNvidia({ topic, signal }) {
-  const apiKey = import.meta.env.VITE_NVIDIA_API_KEY
-  if (!apiKey) {
-    throw new Error(
-      'No API key. Add VITE_NVIDIA_API_KEY to .env.local or switch to Mock mode in Settings.',
-    )
-  }
-
-  const res = await fetch(`${NVIDIA_BASE_URL}/chat/completions`, {
+  // No Authorization header on the client — the /api/nvidia proxy attaches it
+  // server-side using process.env.NVIDIA_API_KEY.
+  const res = await fetch(PROXY_ENDPOINT, {
     method: 'POST',
     signal,
     headers: {
       'content-type': 'application/json',
-      accept: 'application/json',
-      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model: NVIDIA_MODEL,
@@ -157,9 +158,15 @@ async function callNvidia({ topic, signal }) {
   })
 
   if (!res.ok) {
-    const errBody = await res.text().catch(() => '')
+    let errBody = ''
+    try {
+      const j = await res.json()
+      errBody = j?.error || JSON.stringify(j)
+    } catch {
+      errBody = await res.text().catch(() => '')
+    }
     throw new Error(
-      `NVIDIA NIM ${res.status}: ${errBody.slice(0, 200) || res.statusText}`,
+      `Pipeline ${res.status}: ${errBody.slice(0, 200) || res.statusText}`,
     )
   }
 

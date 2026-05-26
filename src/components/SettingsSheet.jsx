@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { usePipeline } from '../context/PipelineContext.jsx'
 
 export default function SettingsSheet({ open, onClose }) {
-  const { mockMode, setMockMode, resetResult, hasApiKey } = usePipeline()
+  const { mockMode, setMockMode, resetResult } = usePipeline()
 
   // Close on ESC
   useEffect(() => {
@@ -76,9 +76,8 @@ export default function SettingsSheet({ open, onClose }) {
               active={!mockMode}
               onClick={() => setMockMode(false)}
               title="Live"
-              description="Calls the NVIDIA NIM API (Llama 4 Maverick). Uses your VITE_NVIDIA_API_KEY."
+              description="Routes through the /api/nvidia serverless proxy to NVIDIA NIM (Llama 4 Maverick)."
               badge="Real"
-              warning={!hasApiKey}
             />
             <div className="border-t border-line" />
             <ModeOption
@@ -89,15 +88,6 @@ export default function SettingsSheet({ open, onClose }) {
               badge="Free"
             />
           </div>
-
-          {!hasApiKey && !mockMode && (
-            <p className="mt-2 text-[12px] text-warn leading-snug">
-              No API key detected. Add{' '}
-              <code className="font-mono text-[11.5px]">VITE_NVIDIA_API_KEY</code>{' '}
-              to your <code className="font-mono text-[11.5px]">.env.local</code>, or
-              switch to Mock to keep working.
-            </p>
-          )}
         </section>
 
         {/* Workspace */}
@@ -132,7 +122,7 @@ export default function SettingsSheet({ open, onClose }) {
   )
 }
 
-function ModeOption({ active, onClick, title, description, badge, warning }) {
+function ModeOption({ active, onClick, title, description, badge }) {
   return (
     <button
       type="button"
@@ -184,11 +174,6 @@ function ModeOption({ active, onClick, title, description, badge, warning }) {
           >
             {badge}
           </span>
-          {warning && (
-            <span className="inline-flex items-center rounded-full bg-warn/15 text-warn px-1.5 py-0.5 text-[10px] font-semibold">
-              No key
-            </span>
-          )}
         </div>
         <p className="mt-0.5 text-[12.5px] text-mute leading-snug">
           {description}

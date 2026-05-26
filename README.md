@@ -7,7 +7,7 @@ A mobile-first React app that runs a 4-agent AI content pipeline (Scraper → Va
 - **Vite 5** + **React 18** + **React Router 6**
 - **Tailwind CSS v4** (CSS-first config via `@theme`)
 - **NVIDIA NIM API** — `meta/llama-4-maverick-17b-128e-instruct`
-  - OpenAI-compatible chat completions at `https://integrate.api.nvidia.com/v1/chat/completions`
+  - Reached via a Vercel serverless proxy at `api/nvidia.js`
 - Fonts: **DM Sans** (body/display) + **JetBrains Mono** (small meta)
 
 ## Pages
@@ -21,18 +21,49 @@ A mobile-first React app that runs a 4-agent AI content pipeline (Scraper → Va
 
 Mobile-first phone frame, capped at **390px** wide and centered on desktop. Floating bottom tab bar with a purple active indicator on a looping GIF + dark-glass card aesthetic.
 
+## How the request flow works
+
+```
+Browser ──► /api/nvidia (Vercel serverless function, same origin)
+                │
+                │  attaches Authorization: Bearer ${NVIDIA_API_KEY}
+                ▼
+            https://integrate.api.nvidia.com/v1/chat/completions
+                │
+                ▼
+            JSON response back through the proxy to the browser
+```
+
+This avoids two problems:
+1. **CORS** — NVIDIA NIM doesn't allow direct browser calls. The proxy is same-origin, so the browser is happy.
+2. **Key exposure** — the API key lives only in the serverless function's environment, never in the client JS bundle.
+
 ## Setup
+
+### Local dev (recommended path: `vercel dev`)
 
 ```bash
 npm install
+npm install -g vercel              # one-time
 cp .env.example .env.local
-# Edit .env.local and paste your NVIDIA API key (starts with nvapi-)
-npm run dev
+# Edit .env.local and paste your NVIDIA key (starts with nvapi-)
+vercel dev
 ```
 
-Get a key from [NVIDIA Build](https://build.nvidia.com/explore/discover).
+`vercel dev` runs the Vite frontend AND the `/api/nvidia` serverless function on the same port, so Live mode works locally. Plain `npm run dev` only runs Vite — Live mode will 404 because the proxy isn't there.
 
-If no key is set, the app automatically defaults to **Mock mode** so the UI is fully usable without an API key.
+If you don't want to install the Vercel CLI, `npm run dev` still works with **Mock mode** — just toggle it in Settings.
+
+### Deploy to Vercel
+
+1. Push your branch to GitHub.
+2. On Vercel, add a Project Environment Variable:
+   - **Key:** `NVIDIA_API_KEY` (no `VITE_` prefix — this is server-side)
+   - **Value:** `nvapi-...` (your key)
+   - **Environments:** Production, Preview, Development
+3. Redeploy.
+
+Get a key from [NVIDIA Build](https://build.nvidia.com/explore/discover).
 
 ## Build
 
@@ -41,55 +72,41 @@ npm run build
 npm run preview
 ```
 
-## How the pipeline works
-
-1. User types a topic on the Pipeline tab and hits **Run full pipeline**.
-2. The four agent cards animate through `Ready → Running → Done` while the API call is in flight.
-3. The app sends the topic + a fixed system prompt to NVIDIA NIM with `model: meta/llama-4-maverick-17b-128e-instruct`.
-4. The model returns a single JSON object containing the validated topic, script, hooks, calendar, and recommended-hook index.
-5. The result is stored in React Context and persisted to `localStorage` so it survives a refresh.
-6. The Script, Hooks, and Calendar tabs read from the same shared state.
-7. A toast slides up: **"Pipeline done!"**
-
 ## Mock vs Live mode
 
 The Settings sheet (gear icon, top right) lets you toggle between two modes:
 
-- **Live** — calls NVIDIA NIM with your API key. Real generations.
-- **Mock** — returns canned demo data after a 3.6s simulated cascade. No API call, no token cost. Useful for UI dev, demos, or running the app without a key.
+- **Live** — POSTs to `/api/nvidia` which calls NVIDIA NIM with your server-side key. Real generations.
+- **Mock** — returns canned demo data after a 3.6s simulated cascade. No API call, no token cost. Useful for UI dev, demos, or running the app without setting up the proxy.
 
 Default behavior:
-- If `VITE_NVIDIA_API_KEY` is present → defaults to **Live**
-- If it's missing → defaults to **Mock** (so the app never appears broken)
-- Once the user toggles, their preference is saved to `localStorage`
-
-## ⚠️ Security note on the API key
-
-`VITE_NVIDIA_API_KEY` is a Vite client-side environment variable. **It will be bundled into the JS sent to the browser.** That is fine for local dev, but if you host this app publicly, anyone can extract the key.
-
-For production, replace the direct `fetch` in `src/context/PipelineContext.jsx` with a call to your own backend (a one-file Vercel / Cloudflare Worker / Lambda function works perfectly). The backend keeps the key in a server-side env var and forwards the request to NVIDIA.
+- New users default to **Live** (the proxy is the standard production path).
+- If Live fails (proxy not configured, key missing on Vercel, NVIDIA upstream error), the toast shows the exact error so you can debug.
+- Once the user toggles, their preference is saved to `localStorage`.
 
 ## Project structure
 
 ```
 Ai-Content-Creator/
+├── api/
+│   └── nvidia.js                 # Vercel serverless proxy → NVIDIA NIM
 ├── index.html
 ├── package.json
 ├── vite.config.js
-├── .env.example
+├── .env.example                  # NVIDIA_API_KEY (server-side)
 ├── public/
-│   ├── bg.gif                    # Looping background GIF (inside the phone frame)
+│   ├── bg.gif                    # Looping background GIF
 │   └── favicon.svg
 └── src/
     ├── main.jsx
     ├── App.jsx
     ├── index.css                 # Tailwind v4 + @theme tokens + animations
     ├── context/
-    │   └── PipelineContext.jsx   # Shared state, NVIDIA NIM API call, persistence
+    │   └── PipelineContext.jsx   # Shared state, /api/nvidia call, persistence
     ├── data/
     │   └── mockResult.js         # Canned data for Mock mode
     ├── components/
-    │   ├── AppShell.jsx          # 390px frame, GIF bg, header, tab bar, toast slot
+    │   ├── AppShell.jsx          # 390px frame, GIF bg, header, tab bar
     │   ├── TabBar.jsx            # 4 tabs with inline SVG icons
     │   ├── PageHeader.jsx        # Reusable eyebrow + title
     │   ├── Toast.jsx             # Auto-dismissing toast
