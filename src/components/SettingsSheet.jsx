@@ -38,11 +38,11 @@ export default function SettingsSheet({ open, onClose }) {
         type="button"
         aria-label="Close settings"
         onClick={onClose}
-        className="absolute inset-0 bg-ink/40 backdrop-blur-[2px] sheet-backdrop-in"
+        className="absolute inset-0 bg-black/60 backdrop-blur-[2px] sheet-backdrop-in"
       />
 
       {/* Sheet */}
-      <div className="absolute bottom-0 left-0 right-0 bg-canvas rounded-t-3xl shadow-[0_-12px_40px_rgba(20,20,30,0.18)] sheet-in pb-6">
+      <div className="absolute bottom-0 left-0 right-0 bg-[#0e0e12]/95 backdrop-blur-xl border-t border-line rounded-t-3xl shadow-[0_-12px_40px_rgba(0,0,0,0.5)] sheet-in pb-6">
         {/* Grabber */}
         <div className="flex justify-center pt-2.5 pb-3">
           <span aria-hidden="true" className="h-1 w-9 rounded-full bg-line-strong" />
