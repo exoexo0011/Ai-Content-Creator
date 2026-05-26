@@ -1,114 +1,121 @@
 import PageHeader from '../components/PageHeader.jsx'
+import EmptyState from '../components/EmptyState.jsx'
+import { usePipeline } from '../context/PipelineContext.jsx'
 
-const beats = [
-  {
-    label: 'Beat 1',
-    role: 'Problem',
-    lines: [
-      'Everyone keeps telling you building AI agents takes weeks.',
-      'That you need LangChain, vector DBs, a CS degree.',
-      'It’s a lie.',
-    ],
-  },
-  {
-    label: 'Beat 2',
-    role: 'Insight',
-    lines: [
-      'Claude Code does 90% of the work for you.',
-      'You describe what you want in plain English. It writes the code, runs it, fixes it.',
-      'You barely touch the keyboard.',
-    ],
-  },
-  {
-    label: 'Beat 3',
-    role: 'Proof',
-    lines: [
-      'I just built one that scans my inbox and replies to leads in my voice.',
-      'Took 9 minutes. From empty folder to running agent.',
-      'It’s answering DMs while I sleep.',
-    ],
-  },
+const beatMeta = [
+  { key: 'beat1', label: 'Beat 1', role: 'Problem' },
+  { key: 'beat2', label: 'Beat 2', role: 'Solution' },
+  { key: 'beat3', label: 'Beat 3', role: 'Proof' },
+  { key: 'cta', label: 'CTA', role: 'Comment trigger' },
 ]
 
-const cta = 'Want the exact prompt I used? Comment AGENT and I’ll DM it to you.'
-
 export default function Script() {
-  const wordCount =
-    beats.reduce((acc, b) => acc + b.lines.join(' ').split(/\s+/).length, 0) +
-    cta.split(/\s+/).length
+  const { result, showToast } = usePipeline()
+  const script = result?.script
 
-  const seconds = Math.round((wordCount / 150) * 60)
+  if (!script) {
+    return (
+      <div className="rise">
+        <PageHeader eyebrow="Script" title="Your script" />
+        <EmptyState
+          icon={<EditIconLg />}
+          title="Run the pipeline first"
+          description="Once your topic is processed, the four-beat script will appear here."
+        />
+      </div>
+    )
+  }
+
+  const fullScript = beatMeta
+    .map((b) => `[${b.label} — ${b.role}]\n${script[b.key] ?? ''}`)
+    .join('\n\n')
+
+  const wordCount = fullScript.split(/\s+/).filter(Boolean).length
+  const seconds = Math.max(1, Math.round((wordCount / 150) * 60))
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(fullScript)
+      showToast('Script copied to clipboard')
+    } catch {
+      showToast('Copy failed', 'error')
+    }
+  }
 
   return (
     <div className="rise">
       <PageHeader
-        eyebrow="03 — Script Writer"
-        title="The 9-minute"
-        italic="agent."
-        kicker="Beat-by-beat. Spoken, not written. The hook lives on the next page."
+        eyebrow="Script"
+        title="The four-beat script"
+        kicker="Spoken, not written. Hook lives on the next tab."
       />
 
       {/* Meta strip */}
-      <section className="px-5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Tag>Reel · 30s</Tag>
-          <Tag>{wordCount} words</Tag>
-          <Tag>~{seconds}s spoken</Tag>
-          <Tag tone="flame">No hook</Tag>
-        </div>
+      <section className="px-5 flex items-center gap-2 flex-wrap">
+        <Tag>{wordCount} words</Tag>
+        <Tag>~{seconds}s spoken</Tag>
+        <Tag tone="primary">No hook</Tag>
       </section>
 
       {/* Beats */}
-      <section className="px-5 mt-6 space-y-4">
-        {beats.map((b, i) => (
-          <article
-            key={b.label}
-            className="rise relative rounded-2xl border border-line bg-ink-2 overflow-hidden"
-            style={{ animationDelay: `${100 + i * 90}ms` }}
-          >
-            {/* Side rail */}
-            <div className="absolute left-0 top-0 bottom-0 w-1 bg-flame/80" aria-hidden="true" />
-            <header className="flex items-baseline justify-between px-5 pt-4 pb-2">
-              <h3 className="font-mono text-[10px] uppercase tracking-[0.28em] text-flame">
-                {b.label}
-              </h3>
-              <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-mute">
-                {b.role}
-              </span>
-            </header>
-            <div className="px-5 pb-5 space-y-2">
-              {b.lines.map((line, j) => (
-                <p
-                  key={j}
-                  className="font-display text-[20px] leading-[1.25] text-bone"
+      <section className="px-5 mt-5 space-y-3">
+        {beatMeta.map((b, i) => {
+          const isCta = b.key === 'cta'
+          return (
+            <article
+              key={b.key}
+              className={[
+                'fade-in rounded-2xl border p-4 relative overflow-hidden',
+                isCta
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-surface text-ink border-line',
+              ].join(' ')}
+              style={{ animationDelay: `${100 + i * 80}ms` }}
+            >
+              <header className="flex items-baseline justify-between mb-2">
+                <h3
+                  className={[
+                    'text-[10.5px] font-semibold uppercase tracking-[0.18em]',
+                    isCta ? 'text-white/80' : 'text-primary',
+                  ].join(' ')}
                 >
-                  {line}
-                </p>
-              ))}
-            </div>
-          </article>
-        ))}
-
-        {/* CTA */}
-        <article className="rise relative rounded-2xl bg-flame text-ink p-5">
-          <h3 className="font-mono text-[10px] uppercase tracking-[0.28em]">
-            CTA · Comment Trigger
-          </h3>
-          <p className="font-display text-[22px] leading-[1.2] mt-2">{cta}</p>
-        </article>
+                  {b.label}
+                </h3>
+                <span
+                  className={[
+                    'text-[10.5px] font-medium uppercase tracking-[0.14em]',
+                    isCta ? 'text-white/70' : 'text-mute',
+                  ].join(' ')}
+                >
+                  {b.role}
+                </span>
+              </header>
+              <p
+                className={[
+                  'text-[16px] leading-[1.45] whitespace-pre-line',
+                  isCta ? 'font-semibold' : '',
+                ].join(' ')}
+              >
+                {script[b.key]}
+              </p>
+            </article>
+          )
+        })}
       </section>
 
-      {/* Action row */}
-      <section className="px-5 mt-6 flex items-center gap-2">
-        <button className="flex-1 rounded-full border border-line bg-ink-2 py-3 text-bone font-mono text-[11px] uppercase tracking-[0.22em] hover:border-flame/50 transition">
-          Copy script
-        </button>
-        <button className="flex-1 rounded-full bg-bone text-ink py-3 font-mono text-[11px] uppercase tracking-[0.22em] hover:bg-paper transition">
-          Send to teleprompter
+      {/* Actions */}
+      <section className="px-5 mt-5 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary text-white py-3 text-[13px] font-semibold hover:bg-primary-hover active:translate-y-px transition"
+        >
+          <CopyIcon />
+          Copy full script
         </button>
       </section>
 
-      <p className="px-5 mt-5 font-mono text-[10px] uppercase tracking-[0.22em] text-mute">
+      <p className="px-5 mt-5 text-[11px] text-mute">
         Script rule · 2-3 lines per beat · spoken voice only
       </p>
     </div>
@@ -116,17 +123,35 @@ export default function Script() {
 }
 
 function Tag({ children, tone }) {
-  const flame = tone === 'flame'
+  const primary = tone === 'primary'
   return (
     <span
       className={[
-        'inline-flex items-center rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em]',
-        flame
-          ? 'bg-flame text-ink'
-          : 'bg-ink-2 text-paper/80 border border-line',
+        'inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold',
+        primary
+          ? 'bg-primary text-white'
+          : 'bg-surface text-ink-2 border border-line',
       ].join(' ')}
     >
       {children}
     </span>
+  )
+}
+
+function CopyIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="8" y="8" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  )
+}
+
+function EditIconLg() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 20h4l10-10-4-4L4 16v4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M14 6l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
   )
 }
