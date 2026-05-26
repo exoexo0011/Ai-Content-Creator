@@ -31,12 +31,11 @@ export default function AppShell({ children }) {
           {/* App header */}
           <header className="flex items-center justify-between px-5 pt-5 pb-3">
             <div className="flex items-center gap-2.5">
-              <span
-                aria-hidden="true"
-                className="grid place-items-center h-8 w-8 rounded-xl bg-primary text-black font-bold text-[15px]"
-              >
-                P
-              </span>
+              <img
+                src="/logo.png"
+                alt="logo"
+                style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }}
+              />
               <div className="leading-tight">
                 <p className="text-[15px] font-semibold text-ink tracking-tight">
                   AI Content Creator
