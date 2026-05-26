@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import { PipelineProvider } from './context/PipelineContext.jsx'
 import AppShell from './components/AppShell.jsx'
 import Pipeline from './pages/Pipeline.jsx'
@@ -20,6 +21,7 @@ export default function App() {
         </Routes>
       </AppShell>
       <Analytics />
+      <SpeedInsights />
     </PipelineProvider>
   )
 }
