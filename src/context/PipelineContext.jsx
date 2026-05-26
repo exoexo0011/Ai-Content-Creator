@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { MOCK_RESULT } from '../data/mockResult.js'
 
 const PipelineContext = createContext(null)
 
@@ -73,6 +74,9 @@ Return only valid JSON. No markdown, no explanation, no extra text.`
 
 const STORAGE_KEY = 'aicc:result:v1'
 const TOPIC_KEY = 'aicc:topic:v1'
+const MOCK_KEY = 'aicc:mockMode:v1'
+
+const HAS_API_KEY = Boolean(import.meta.env.VITE_ANTHROPIC_API_KEY)
 
 function loadResult() {
   try {
@@ -94,6 +98,18 @@ function loadTopic() {
   }
 }
 
+function loadMockMode() {
+  try {
+    const raw = localStorage.getItem(MOCK_KEY)
+    if (raw === 'true') return true
+    if (raw === 'false') return false
+    // No saved preference — default to mock if no API key, otherwise live
+    return !HAS_API_KEY
+  } catch {
+    return !HAS_API_KEY
+  }
+}
+
 function extractJson(text) {
   // Strip markdown fences if Claude added them despite instructions
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i)
@@ -111,7 +127,7 @@ async function callClaude({ topic, signal }) {
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
   if (!apiKey) {
     throw new Error(
-      'Missing VITE_ANTHROPIC_API_KEY. Add it to .env.local and restart the dev server.',
+      'No API key. Add VITE_ANTHROPIC_API_KEY to .env.local or switch to Mock mode in Settings.',
     )
   }
 
@@ -145,6 +161,25 @@ async function callClaude({ topic, signal }) {
   return extractJson(text)
 }
 
+// Resolves to mock data after a small delay so the agent cascade has time
+// to play. Cancellable via AbortSignal.
+function fakeFetchMock({ signal, delayMs = 3600 }) {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException('Aborted', 'AbortError'))
+      return
+    }
+    const timer = setTimeout(() => {
+      // Deep clone so consumers can't mutate the source
+      resolve(JSON.parse(JSON.stringify(MOCK_RESULT)))
+    }, delayMs)
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timer)
+      reject(new DOMException('Aborted', 'AbortError'))
+    })
+  })
+}
+
 function initialAgentStates() {
   return {
     scraper: 'ready',
@@ -161,11 +196,12 @@ export function PipelineProvider({ children }) {
   const [isRunning, setIsRunning] = useState(false)
   const [error, setError] = useState(null)
   const [toast, setToast] = useState(null)
+  const [mockMode, setMockModeState] = useState(() => loadMockMode())
   const toastTimer = useRef(null)
   const cascadeTimers = useRef([])
   const abortRef = useRef(null)
 
-  // Persist topic + result
+  // Persist topic + result + mode
   useEffect(() => {
     try {
       localStorage.setItem(TOPIC_KEY, topic)
@@ -178,6 +214,12 @@ export function PipelineProvider({ children }) {
     } catch {}
   }, [result])
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(MOCK_KEY, String(mockMode))
+    } catch {}
+  }, [mockMode])
+
   const showToast = useCallback((message, tone = 'success', duration = 2800) => {
     if (toastTimer.current) clearTimeout(toastTimer.current)
     setToast({ message, tone })
@@ -187,6 +229,18 @@ export function PipelineProvider({ children }) {
   const setTopic = useCallback((next) => {
     setTopicState(next)
   }, [])
+
+  const setMockMode = useCallback(
+    (next) => {
+      setMockModeState(next)
+      showToast(
+        next ? 'Switched to Mock mode' : 'Switched to Live mode',
+        'info',
+        2000,
+      )
+    },
+    [showToast],
+  )
 
   const clearCascade = () => {
     cascadeTimers.current.forEach((t) => clearTimeout(t))
@@ -236,8 +290,10 @@ export function PipelineProvider({ children }) {
       })
 
       try {
-        const data = await callClaude({ topic: t, signal: controller.signal })
-        // Mark all agents done
+        const data = mockMode
+          ? await fakeFetchMock({ signal: controller.signal })
+          : await callClaude({ topic: t, signal: controller.signal })
+
         clearCascade()
         setAgentStates({
           scraper: 'done',
@@ -246,7 +302,10 @@ export function PipelineProvider({ children }) {
           hooks: 'done',
         })
         setResult(data)
-        showToast('Pipeline done!', 'success')
+        showToast(
+          mockMode ? 'Mock pipeline done!' : 'Pipeline done!',
+          'success',
+        )
       } catch (e) {
         if (e.name === 'AbortError') return
         clearCascade()
@@ -257,7 +316,7 @@ export function PipelineProvider({ children }) {
         setIsRunning(false)
       }
     },
-    [topic, isRunning, showToast],
+    [topic, isRunning, mockMode, showToast],
   )
 
   const resetResult = useCallback(() => {
@@ -266,7 +325,8 @@ export function PipelineProvider({ children }) {
     try {
       localStorage.removeItem(STORAGE_KEY)
     } catch {}
-  }, [])
+    showToast('Workspace cleared', 'info', 1800)
+  }, [showToast])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -286,11 +346,27 @@ export function PipelineProvider({ children }) {
       isRunning,
       error,
       toast,
+      mockMode,
+      setMockMode,
+      hasApiKey: HAS_API_KEY,
       runPipeline,
       resetResult,
       showToast,
     }),
-    [topic, setTopic, result, agentStates, isRunning, error, toast, runPipeline, resetResult, showToast],
+    [
+      topic,
+      setTopic,
+      result,
+      agentStates,
+      isRunning,
+      error,
+      toast,
+      mockMode,
+      setMockMode,
+      runPipeline,
+      resetResult,
+      showToast,
+    ],
   )
 
   return (

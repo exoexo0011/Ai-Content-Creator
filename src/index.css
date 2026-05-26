@@ -105,6 +105,22 @@ body {
   animation: toastIn 0.3s ease-out both;
 }
 
+/* Bottom-sheet slide-up */
+@keyframes sheetIn {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.sheet-in {
+  animation: sheetIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes sheetBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.sheet-backdrop-in {
+  animation: sheetBackdropIn 0.25s ease-out both;
+}
+
 /* Subtle progress bar shimmer */
 @keyframes shimmer {
   0% { background-position: -200px 0; }
