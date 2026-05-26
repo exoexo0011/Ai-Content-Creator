@@ -76,7 +76,7 @@ export default function SettingsSheet({ open, onClose }) {
               active={!mockMode}
               onClick={() => setMockMode(false)}
               title="Live"
-              description="Calls the Claude API. Uses your VITE_ANTHROPIC_API_KEY."
+              description="Calls the NVIDIA NIM API (Llama 4 Maverick). Uses your VITE_NVIDIA_API_KEY."
               badge="Real"
               warning={!hasApiKey}
             />
@@ -93,7 +93,7 @@ export default function SettingsSheet({ open, onClose }) {
           {!hasApiKey && !mockMode && (
             <p className="mt-2 text-[12px] text-warn leading-snug">
               No API key detected. Add{' '}
-              <code className="font-mono text-[11.5px]">VITE_ANTHROPIC_API_KEY</code>{' '}
+              <code className="font-mono text-[11.5px]">VITE_NVIDIA_API_KEY</code>{' '}
               to your <code className="font-mono text-[11.5px]">.env.local</code>, or
               switch to Mock to keep working.
             </p>

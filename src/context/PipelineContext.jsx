@@ -13,6 +13,10 @@ const PipelineContext = createContext(null)
 
 export const AGENT_KEYS = ['scraper', 'validator', 'script', 'hooks']
 
+// NVIDIA NIM API — OpenAI-compatible chat completions endpoint
+const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1'
+const NVIDIA_MODEL = 'meta/llama-4-maverick-17b-128e-instruct'
+
 const SYSTEM_PROMPT = `You are an AI content strategist and script writer.
 Niche: AI tools, Claude Code, and automation.
 Audience: beginner to intermediate creators and developers.
@@ -76,7 +80,7 @@ const STORAGE_KEY = 'aicc:result:v1'
 const TOPIC_KEY = 'aicc:topic:v1'
 const MOCK_KEY = 'aicc:mockMode:v1'
 
-const HAS_API_KEY = Boolean(import.meta.env.VITE_ANTHROPIC_API_KEY)
+const HAS_API_KEY = Boolean(import.meta.env.VITE_NVIDIA_API_KEY)
 
 function loadResult() {
   try {
@@ -111,7 +115,7 @@ function loadMockMode() {
 }
 
 function extractJson(text) {
-  // Strip markdown fences if Claude added them despite instructions
+  // Strip markdown fences if the model added them despite instructions
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i)
   const candidate = fenced ? fenced[1] : text
   // Find the first { and last } as a safety net
@@ -123,41 +127,45 @@ function extractJson(text) {
   return JSON.parse(candidate.slice(first, last + 1))
 }
 
-async function callClaude({ topic, signal }) {
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
+async function callNvidia({ topic, signal }) {
+  const apiKey = import.meta.env.VITE_NVIDIA_API_KEY
   if (!apiKey) {
     throw new Error(
-      'No API key. Add VITE_ANTHROPIC_API_KEY to .env.local or switch to Mock mode in Settings.',
+      'No API key. Add VITE_NVIDIA_API_KEY to .env.local or switch to Mock mode in Settings.',
     )
   }
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch(`${NVIDIA_BASE_URL}/chat/completions`, {
     method: 'POST',
     signal,
     headers: {
       'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
+      accept: 'application/json',
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4000,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: topic }],
+      model: NVIDIA_MODEL,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: topic },
+      ],
+      temperature: 0.5,
+      top_p: 1,
+      max_tokens: 4096,
+      stream: false,
     }),
   })
 
   if (!res.ok) {
     const errBody = await res.text().catch(() => '')
     throw new Error(
-      `Claude API ${res.status}: ${errBody.slice(0, 200) || res.statusText}`,
+      `NVIDIA NIM ${res.status}: ${errBody.slice(0, 200) || res.statusText}`,
     )
   }
 
   const data = await res.json()
-  const text = data?.content?.[0]?.text
-  if (!text) throw new Error('Empty response from Claude')
+  const text = data?.choices?.[0]?.message?.content
+  if (!text) throw new Error('Empty response from NVIDIA NIM')
   return extractJson(text)
 }
 
@@ -292,7 +300,7 @@ export function PipelineProvider({ children }) {
       try {
         const data = mockMode
           ? await fakeFetchMock({ signal: controller.signal })
-          : await callClaude({ topic: t, signal: controller.signal })
+          : await callNvidia({ topic: t, signal: controller.signal })
 
         clearCascade()
         setAgentStates({
