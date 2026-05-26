@@ -16,39 +16,43 @@ export default function TabBar() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] z-50 px-3 pb-3 pointer-events-none"
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] z-50"
+      style={{
+        background: 'rgba(10, 10, 10, 0.98)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+      }}
     >
-      <div className="rounded-2xl bg-surface border border-line shadow-[0_6px_24px_rgba(20,20,30,0.08)] pointer-events-auto">
-        <ul className="grid grid-cols-4">
-          {tabs.map(({ to, label, icon: Icon }) => (
-            <li key={to}>
-              <NavLink
-                to={to}
-                className={({ isActive }) =>
-                  [
-                    'group relative flex flex-col items-center justify-center gap-1 py-3 text-[10.5px] font-semibold transition-colors',
-                    isActive ? 'text-primary' : 'text-mute hover:text-ink',
-                  ].join(' ')
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <span
-                      aria-hidden="true"
-                      className={[
-                        'absolute top-0 left-1/2 -translate-x-1/2 h-[3px] rounded-b-full transition-all',
-                        isActive ? 'w-8 bg-primary' : 'w-0 bg-transparent',
-                      ].join(' ')}
-                    />
-                    <Icon active={isActive} />
-                    <span>{label}</span>
-                  </>
-                )}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <ul className="grid grid-cols-4">
+        {tabs.map(({ to, label, icon: Icon }) => (
+          <li key={to}>
+            <NavLink
+              to={to}
+              className={({ isActive }) =>
+                [
+                  'group relative flex flex-col items-center justify-center gap-1 py-3 text-[10.5px] font-semibold transition-colors',
+                  isActive ? 'text-primary' : 'text-mute hover:text-ink',
+                ].join(' ')
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className={[
+                      'absolute top-0 left-1/2 -translate-x-1/2 h-[3px] rounded-b-full transition-all',
+                      isActive ? 'w-8 bg-primary' : 'w-0 bg-transparent',
+                    ].join(' ')}
+                  />
+                  <Icon active={isActive} />
+                  <span>{label}</span>
+                </>
+              )}
+            </NavLink>
+          </li>
+        ))}
+      </ul>
     </nav>
   )
 }
