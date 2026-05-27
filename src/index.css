@@ -24,14 +24,15 @@
   --color-danger: #ef4f4f;
 
   /* Type */
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 html,
 body,
 #root {
   height: 100%;
+  font-family: "Space Grotesk", sans-serif;
 }
 
 html {
@@ -41,7 +42,7 @@ html {
 
 body {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: "Space Grotesk", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #000;
