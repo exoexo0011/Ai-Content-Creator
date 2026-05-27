@@ -5,9 +5,47 @@ import SettingsSheet from './SettingsSheet.jsx'
 import InstallBanner from './InstallBanner.jsx'
 import { usePipeline } from '../context/PipelineContext.jsx'
 
+const RESULT_STORAGE_KEY = 'aicc:result:v1'
+
 export default function AppShell({ children }) {
-  const { toast, mockMode } = usePipeline()
+  const { toast, mockMode, showToast } = usePipeline()
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  const handleExport = () => {
+    let raw = null
+    try {
+      raw = localStorage.getItem(RESULT_STORAGE_KEY)
+    } catch {
+      raw = null
+    }
+
+    if (!raw) {
+      showToast('Run the pipeline first', 'info')
+      return
+    }
+
+    try {
+      // Pretty-print so the downloaded JSON is human-readable
+      const parsed = JSON.parse(raw)
+      const pretty = JSON.stringify(parsed, null, 2)
+      const blob = new Blob([pretty], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const stamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, '-')
+        .slice(0, 19)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `ai-content-pipeline-${stamp}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      showToast('Exported pipeline result', 'success')
+    } catch {
+      showToast('Could not export result', 'error')
+    }
+  }
 
   return (
     <div className="min-h-dvh w-full bg-black flex justify-center">
@@ -54,14 +92,24 @@ export default function AppShell({ children }) {
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setSettingsOpen(true)}
-              aria-label="Open settings"
-              className="grid place-items-center h-9 w-9 rounded-full bg-surface border border-line text-ink-2 hover:border-primary-ring hover:text-ink transition-colors"
-            >
-              <SettingsIcon />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleExport}
+                aria-label="Export pipeline result as JSON"
+                className="grid place-items-center h-9 w-9 rounded-full bg-surface border border-line text-ink-2 hover:border-primary-ring hover:text-ink transition-colors"
+              >
+                <DownloadIcon />
+              </button>
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(true)}
+                aria-label="Open settings"
+                className="grid place-items-center h-9 w-9 rounded-full bg-surface border border-line text-ink-2 hover:border-primary-ring hover:text-ink transition-colors"
+              >
+                <SettingsIcon />
+              </button>
+            </div>
           </header>
 
           {/* Install banner — sits below the header, above main. Hidden
@@ -90,6 +138,27 @@ export default function AppShell({ children }) {
         </div>
       </div>
     </div>
+  )
+}
+
+function DownloadIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 3v12m0 0l-4-4m4 4l4-4"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }
 
