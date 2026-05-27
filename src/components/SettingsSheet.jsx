@@ -2,6 +2,14 @@ import { useEffect, useState } from 'react'
 import { usePipeline } from '../context/PipelineContext.jsx'
 import { useInstallPrompt } from '../hooks/useInstallPrompt.js'
 
+// localStorage keys
+const PLATFORM_KEY = 'aicc:platform'
+const NICHES_KEY = 'aicc:niches'
+
+// Defaults — Instagram + AI Tools per spec
+const DEFAULT_PLATFORM = 'instagram'
+const DEFAULT_NICHES = ['ai-tools']
+
 // Settings is rendered as a FULL-FRAME overlay (not a bottom sheet) so it
 // cannot be clipped at the bottom of the phone frame. The panel fills the
 // entire app surface (`absolute inset-0`) and scrolls internally if its
@@ -9,9 +17,58 @@ import { useInstallPrompt } from '../hooks/useInstallPrompt.js'
 // preserves the blurred-page effect behind the 5% transparency, so the
 // "backdrop blur" treatment is kept without a separate backdrop layer.
 export default function SettingsSheet({ open, onClose }) {
-  const { mockMode, setMockMode, resetResult, showToast } = usePipeline()
+  const { resetResult, showToast } = usePipeline()
   const { isAvailable, isStandalone, promptInstall } = useInstallPrompt()
   const [showInstallHint, setShowInstallHint] = useState(false)
+
+  // Selected platform — single value, defaults to Instagram
+  const [platform, setPlatform] = useState(() => {
+    try {
+      const raw = localStorage.getItem(PLATFORM_KEY)
+      if (!raw) return DEFAULT_PLATFORM
+      // Validate against known ids so a stale value can't break the UI
+      return PLATFORMS.some((p) => p.id === raw) ? raw : DEFAULT_PLATFORM
+    } catch {
+      return DEFAULT_PLATFORM
+    }
+  })
+
+  // Selected niches — array, multi-select, defaults to ['ai-tools']
+  const [niches, setNiches] = useState(() => {
+    try {
+      const raw = localStorage.getItem(NICHES_KEY)
+      if (!raw) return DEFAULT_NICHES
+      const parsed = JSON.parse(raw)
+      if (!Array.isArray(parsed)) return DEFAULT_NICHES
+      const valid = parsed.filter((id) => NICHES.some((n) => n.id === id))
+      return valid.length ? valid : DEFAULT_NICHES
+    } catch {
+      return DEFAULT_NICHES
+    }
+  })
+
+  // Persist selections whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(PLATFORM_KEY, platform)
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }, [platform])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(NICHES_KEY, JSON.stringify(niches))
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }, [niches])
+
+  const toggleNiche = (id) => {
+    setNiches((prev) =>
+      prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id]
+    )
+  }
 
   const handleInstallClick = async () => {
     if (isStandalone) return
@@ -87,28 +144,73 @@ export default function SettingsSheet({ open, onClose }) {
             in the future, this area scrolls internally — the panel itself
             never gets cut off. */}
         <div className="flex-1 overflow-y-auto no-scrollbar pb-6">
-          {/* Pipeline mode */}
+          {/* Platform — single-select, 2x2 grid */}
           <section className="px-5 pt-5">
             <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-mute mb-2">
-              Pipeline mode
+              Platform
             </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {PLATFORMS.map((p) => {
+                const selected = platform === p.id
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setPlatform(p.id)}
+                    aria-pressed={selected}
+                    className={[
+                      'flex items-center justify-center gap-2 px-3 py-3 rounded-xl border transition-colors',
+                      selected
+                        ? 'bg-primary-soft text-ink'
+                        : 'bg-surface border-line text-ink-2 hover:border-primary-ring hover:text-ink',
+                    ].join(' ')}
+                    style={
+                      selected
+                        ? { borderColor: '#00FF41' }
+                        : undefined
+                    }
+                  >
+                    <p.Icon />
+                    <span className="text-[13px] font-semibold">{p.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
 
-            <div className="rounded-2xl bg-surface border border-line overflow-hidden">
-              <ModeOption
-                active={!mockMode}
-                onClick={() => setMockMode(false)}
-                title="Live"
-                description="Routes through the /api/nvidia serverless proxy to NVIDIA NIM (Llama 4 Maverick)."
-                badge="Real"
-              />
-              <div className="border-t border-line" />
-              <ModeOption
-                active={mockMode}
-                onClick={() => setMockMode(true)}
-                title="Mock"
-                description="Returns canned demo data. Safe for testing the UI."
-                badge="Free"
-              />
+          {/* Niche — multi-select, 2x3 grid (2 cols × 3 rows) */}
+          <section className="px-5 mt-5">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-mute mb-2">
+              Niche
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {NICHES.map((n) => {
+                const selected = niches.includes(n.id)
+                return (
+                  <button
+                    key={n.id}
+                    type="button"
+                    onClick={() => toggleNiche(n.id)}
+                    aria-pressed={selected}
+                    className={[
+                      'flex items-center justify-center gap-2 px-3 py-3 rounded-xl border transition-colors',
+                      selected
+                        ? 'bg-primary-soft text-ink'
+                        : 'bg-surface border-line text-ink-2 hover:border-primary-ring hover:text-ink',
+                    ].join(' ')}
+                    style={
+                      selected
+                        ? { borderColor: '#00FF41' }
+                        : undefined
+                    }
+                  >
+                    <span className="text-[16px] leading-none" aria-hidden="true">
+                      {n.emoji}
+                    </span>
+                    <span className="text-[13px] font-semibold">{n.label}</span>
+                  </button>
+                )
+              })}
             </div>
           </section>
 
@@ -226,6 +328,29 @@ export default function SettingsSheet({ open, onClose }) {
   )
 }
 
+// ----------------------------------------------------------------------------
+// Platform options — id, label, and a brand-accurate inline SVG logo. Icons
+// render in full color so each platform reads instantly even at chip size.
+// ----------------------------------------------------------------------------
+const PLATFORMS = [
+  { id: 'instagram', label: 'Instagram', Icon: PlatformInstagramIcon },
+  { id: 'youtube', label: 'YouTube', Icon: PlatformYouTubeIcon },
+  { id: 'tiktok', label: 'TikTok', Icon: PlatformTikTokIcon },
+  { id: 'twitter', label: 'Twitter/X', Icon: PlatformXIcon },
+]
+
+// ----------------------------------------------------------------------------
+// Niche options — id, emoji, label. Multi-select.
+// ----------------------------------------------------------------------------
+const NICHES = [
+  { id: 'ai-tools', emoji: '🤖', label: 'AI Tools' },
+  { id: 'crypto', emoji: '💰', label: 'Crypto' },
+  { id: 'fitness', emoji: '💪', label: 'Fitness' },
+  { id: 'business', emoji: '📈', label: 'Business' },
+  { id: 'gaming', emoji: '🎮', label: 'Gaming' },
+  { id: 'lifestyle', emoji: '✨', label: 'Lifestyle' },
+]
+
 // Social/contact link entries. Icon backgrounds are set per-platform so
 // each brand reads correctly: Email uses the app's green accent, Instagram
 // gets its real magenta-orange gradient, GitHub and Threads get a near-black
@@ -266,64 +391,75 @@ const SOCIAL_LINKS = [
   },
 ]
 
-function ModeOption({ active, onClick, title, description, badge }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={[
-        'w-full text-left flex items-start gap-3 p-4 transition-colors',
-        active ? 'bg-primary-soft' : 'hover:bg-canvas',
-      ].join(' ')}
-    >
-      {/* Radio indicator */}
-      <span
-        aria-hidden="true"
-        className={[
-          'mt-0.5 grid place-items-center h-5 w-5 rounded-full border-2 shrink-0 transition-colors',
-          active ? 'border-primary bg-primary' : 'border-line-strong bg-surface',
-        ].join(' ')}
-      >
-        {active && (
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M5 12.5l4 4 10-10"
-              stroke="black"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-      </span>
+// ----------------------------------------------------------------------------
+// Platform brand icons — full-color, rendered inline so no extra assets load.
+// ----------------------------------------------------------------------------
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p
-            className={[
-              'text-[14.5px] font-semibold',
-              active ? 'text-primary' : 'text-ink',
-            ].join(' ')}
-          >
-            {title}
-          </p>
-          <span
-            className={[
-              'inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
-              active
-                ? 'bg-primary text-black'
-                : 'bg-canvas text-ink-2 border border-line',
-            ].join(' ')}
-          >
-            {badge}
-          </span>
-        </div>
-        <p className="mt-0.5 text-[12.5px] text-mute leading-snug">
-          {description}
-        </p>
-      </div>
-    </button>
+// Instagram — real brand gradient (orange → magenta → purple) on a rounded
+// square, with the white camera body and viewfinder dot on top.
+function PlatformInstagramIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+      <defs>
+        <linearGradient id="ig-grad-chip" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#FA7E1E" />
+          <stop offset="50%" stopColor="#D62976" />
+          <stop offset="100%" stopColor="#962FBF" />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="2" width="20" height="20" rx="5" fill="url(#ig-grad-chip)" />
+      <rect
+        x="6.5"
+        y="6.5"
+        width="11"
+        height="11"
+        rx="3.5"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="1.6"
+      />
+      <circle cx="12" cy="12" r="3.2" fill="none" stroke="#fff" strokeWidth="1.6" />
+      <circle cx="17.2" cy="6.8" r="1" fill="#fff" />
+    </svg>
+  )
+}
+
+// YouTube — red rounded rectangle with the white play triangle.
+function PlatformYouTubeIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="1" y="5" width="22" height="14" rx="4" fill="#FF0000" />
+      <path d="M10 9.2v5.6l5-2.8z" fill="#fff" />
+    </svg>
+  )
+}
+
+// TikTok — black rounded square with the iconic music-note silhouette.
+// Cyan and magenta shadow copies are offset to recreate the brand glitch
+// effect, with the white note rendered on top.
+function PlatformTikTokIcon() {
+  const note =
+    'M14.7 6.6c.7 1.6 2 2.7 3.6 3v2.2c-1.4-.1-2.6-.6-3.6-1.4v4.4c0 2.5-2 4.5-4.5 4.5s-4.5-2-4.5-4.5 2-4.5 4.5-4.5c.3 0 .5 0 .8.05v2.3a2.3 2.3 0 1 0 1.5 2.15V5.6h2.2z'
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="4" fill="#000" />
+      <path d={note} fill="#25F4EE" transform="translate(-1,-0.6)" />
+      <path d={note} fill="#FE2C55" transform="translate(1,0.6)" />
+      <path d={note} fill="#fff" />
+    </svg>
+  )
+}
+
+// Twitter/X — black rounded square with the X mark.
+function PlatformXIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="4" fill="#000" />
+      <path
+        d="M16.7 6.5h2.4l-5.25 6L20.2 19.5h-4.86l-3.6-4.7-4.13 4.7H5.2l5.6-6.4L4.9 6.5h4.98l3.27 4.31L16.7 6.5zm-.84 11.6h1.34L8.55 7.83H7.12l8.74 10.27z"
+        fill="#fff"
+      />
+    </svg>
   )
 }
 
